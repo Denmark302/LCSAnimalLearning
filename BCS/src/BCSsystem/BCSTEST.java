@@ -1,8 +1,10 @@
 package BCSsystem;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Random;
-public class BCS {
+
+public class BCSTEST {
 	
 	public static void main(String[] args) {
 		String[] Actions = {"Charge", "Sneak", "Adjust+Charge", "Adjust+Sneak"};
@@ -19,7 +21,7 @@ public class BCS {
 		int loc = 0;
 		ArrayList<Classifer> Classifers = new ArrayList<Classifer>();
 		agentAnimal Predator = new agentAnimal((Generator.nextInt(10) + 35), (Generator.nextInt(3) + 5), 30);
-		for( int u = 0; u < 100; u++){
+		for( int u = 0; u < 10000; u++){
 			float ActPayoff = 0.0f;
 			ArrayList<Classifer> ActionSet = new ArrayList<Classifer>();
 			//Scenario Scene = new Scenario ((Generator.nextInt(61) + 100), 180, (round(0.0f + Generator.nextFloat() * 0.3f, 1)));
@@ -46,106 +48,22 @@ public class BCS {
 				}
 			}
 			Action = ActionSet.remove(WeightSelection(ActionSet));
-			Copy = CopyClassifer(Action);
-			String currentAction = Copy.Action;
-			//Initial check if prey is aware
-			if(Copy.TargetAwareness >= 1.0f){
-				System.out.println("Prey is aware of predators presence");
-					currentAction = "Charge";
-			}
-			float aware = Copy.TargetAwareness;
-			//Unaware phase
-			boolean conclude = false;
-			int angle = Copy.TargetAngle;
-			while(aware < 1.0f && !conclude){
-				if(currentAction.contains("Adjust")){
-					//placeholder turn mechanic REPLACE IN FINAL VERSION
-					Copy.SetAngle(Copy.TargetAngle + Predator.TurnSpeed);
-					Predator.SetSpeed(Predator.acceleration);
-					if(Copy.TargetAngle >= 180){
-						Copy.SetAngle(180);
-						currentAction = currentAction.replace("Adjust+", "");
-					}
-					intensity = intensityCheck(Predator, Copy.TargetDistance, Action);
-					aware = awarenessCheck(aware, intensity);
-					System.out.println("awareness is " + aware);
-					System.out.println();
-					if(aware >= 1.0){
-						currentAction = currentAction.replace("Adjust+", "");
-					}
-				}
-				else if(currentAction.equals("Charge") | currentAction.equals("Sneak")){
-					Copy.SetDistance(Copy.TargetDistance -= Predator.Speed);
-					if(Copy.TargetDistance <= 0){
-						ActPayoff = 1.0f;
-						conclude = true;
-						counter++;
-						System.out.println("Prey captured");
-					}
-					
-					if(currentAction.equals("Sneak")){
-						Predator.Accelerate();
-						System.out.println("Predator is sneaking");
-						if(Predator.Speed > Predator.topSpeed/3){
-							Predator.SetSpeed(Predator.topSpeed/3);
-						}
 
-					}
-					else{
-						Predator.Accelerate();
-					}
-					intensity = intensityCheck(Predator, Copy.TargetDistance, Action);
-					aware = awarenessCheck(aware, intensity);
-					System.out.println("awareness is " + aware);
-					System.out.println();
-					
-				}
-	
-				if(aware >= 1.0f){
-					System.out.println("Prey is now aware of the predators presence");
-					currentAction = "Charge";
-					}
-				
+			if(Action.Action == "Charge"){
+				Action.SetPayoff(1.0f);
+				counter++;
 			}
-			
-			//aware phase
-			while(!conclude){
-				if(angle < 180){
-					angle += Prey.TurnSpeed;
-					if(angle > 180){
-						angle = 180;
-					}
-				}
-				if(currentAction.equals("Charge")){
-					Prey.Accelerate();
-					Copy.SetDistance( Copy.TargetDistance += SpeedEfficent(angle, Prey.Speed));
-					System.out.println("Prey is moving at " + Prey.Speed);
-					Predator.Accelerate();
-					Copy.SetDistance(Copy.TargetDistance -=  Predator.Speed);
-					System.out.println("Predator is moving at " + Predator.Speed);
-					if(Copy.TargetDistance <= 0){
-						Copy.SetDistance(0);
-						conclude = true;
-						ActPayoff = 1.0f;
-						counter++;
-						System.out.println("Prey captured");
-					}
-					else if(Copy.TargetDistance > 0 && SpeedEfficent(angle, Prey.Speed) >= Predator.Speed){
-						conclude = true;
-						ActPayoff = round( ((float)Copy.TargetDistance/Action.TargetDistance)  ,1);
-						if(ActPayoff >= 0.8f && ActPayoff < 1.0f ){
-							partcount++;
-						}
-						if(ActPayoff >= 0.6f && ActPayoff < 0.8f ){
-							halfcount++;
-						}
-						System.out.println("Prey got away");
-						System.out.println("distance covered: " + (Action.TargetDistance - Copy.TargetDistance));
-					}
-				}
+			else if(Action.Action == "Sneak"){
+				Action.SetPayoff(0.2f);
 			}
-			Action.SetPayoff(ActPayoff);
-
+			else if(Action.Action == "Adjust+Charge"){
+				Action.SetPayoff(0.5f);
+				halfcount++;
+			}
+			else if(Action.Action == "Adjust+Sneak"){
+				Action.SetPayoff(0.1f);
+			}
+			runcounter++;
 			if(maxfit == 1.0f){
 				for(int x = 0; x < Classifers.size(); x++ ){
 					if(Action.Action.equals((Classifers).get(x).Action) && ClassSimular(Action, Classifers.get(x)) == 1.0f){
@@ -160,7 +78,6 @@ public class BCS {
 				}
 			}
 			Classifers.add(Action);
-			runcounter++;
 		}
 		
 		for(int t = 0; t < Classifers.size(); t++){
